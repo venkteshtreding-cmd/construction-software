@@ -33,6 +33,9 @@ td{padding:11px 12px;border-top:1px solid var(--bd);white-space:nowrap}tr:hover 
 #toast{position:fixed;right:20px;bottom:20px;background:#0f172a;color:#fff;padding:12px 18px;border-radius:10px;z-index:99;display:none}
 .lg{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}.lgl{background:linear-gradient(135deg,#312e81,#6d28d9);color:#fff;padding:60px;display:flex;flex-direction:column;justify-content:center;gap:14px}
 .lgl h1{font-size:34px}.lgl p{opacity:.85;max-width:380px}.lgr{display:grid;place-items:center;padding:24px;background:#fff}.lgb{width:100%;max-width:340px}.lgb h2{margin-bottom:4px;font-size:24px}
+.main.nos{margin-left:0}.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;height:calc(100vh - 88px);min-height:380px}
+.tile{border-radius:22px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:clamp(16px,3vw,28px);font-weight:700;cursor:pointer;box-shadow:0 6px 18px #0f172a33;text-align:center;padding:10px}
+.tile svg{width:clamp(44px,9vw,84px);height:clamp(44px,9vw,84px)}.tile:active{transform:scale(.97)}
 @media(max-width:860px){.side{transform:translateX(-100%)}.side.o{transform:none}.main{margin-left:0}.g2,.lg{grid-template-columns:1fr}.lgl{display:none}.pg{padding:14px}.top{padding:10px 14px}.hb{display:flex}}
 </style></head><body><div id="app"></div><div id="toast"></div><script>
 const URL_='https://xggzsdhijlmwmgiecjsf.supabase.co',KEY='sb_publishable_dlqLysZMJLzmpBPkWKt5lg_6QTbbn-5';
@@ -56,7 +59,7 @@ async function boot(){
  const{data:{session}}=await sb.auth.getSession();if(!session)return loginUI();
  const{data:p,error:pe}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle();
  if(!p||!p.active){await sb.auth.signOut();return loginUI(pe?'DB error: '+pe.message:!p?'Profile sapdla nahi (id: '+session.user.id+')':'Account disabled ahe')}
- me=p;cos=(await sb.from('companies').select('*').order('name')).data||[];
+ me=p;if(me.role!='admin'&&tab=='dash')tab='uhome';if(me.role=='admin'&&tab=='uhome')tab='dash';cos=(await sb.from('companies').select('*').order('name')).data||[];
  cid=localStorage.getItem('cid');if(!cos.find(x=>x.id==cid))cid=cos[0]?.id;
  await loadRef();shell()}
 async function loadRef(){if(!cid){items=[];parties=[];return}
@@ -64,14 +67,18 @@ async function loadRef(){if(!cid){items=[];parties=[];return}
 const NAV=[['Main',[['dash','Dashboard','home']]],['Operations',[['production','Production','layers'],['sale','Sale','cart'],['receive','Material Receive','truck'],['stock','Stock','box']]],['Master',[['parties','Parties','users'],['items','Items','tag']]],['Admin',[['companies','Companies','bld'],['users','Users','shield'],['backup','Backup','dl']],1]];
 function shell(){const adm=me.role=='admin',ini=(me.full_name||me.username)[0].toUpperCase();
  $('#app').innerHTML=`<aside class=side id=sd><div class=brand><div class=logo>${ic('bld')}</div>Company ERP</div><div class=menu>${NAV.filter(s=>!s[2]||adm).map(s=>`<small>${s[0]}</small>${s[1].map(n=>`<a class="${n[0]==tab?'on':''}" onclick="go('${n[0]}')">${ic(n[2])}${n[1]}</a>`).join('')}`).join('')}</div><div class=menu style="flex:none"><a onclick="sb.auth.signOut().then(boot)">${ic('out')}Logout</a></div></aside>
- <div class=main><div class=top><span class=hb onclick="$('#sd').classList.toggle('o')">${ic('menu')}</span><select onchange="setCo(this.value)">${cos.map(c=>`<option value="${c.id}" ${c.id==cid?'selected':''}>${esc(c.name)}</option>`).join('')||'<option>No company</option>'}</select><span class=sp></span><span class="bd ${adm?'':'gn'}">${adm?'Admin':'User'}</span><div class=av title="Change password" onclick="chPw()">${esc(ini)}</div></div><div class=pg id=pg></div></div>`;render()}
+ <div class=main><div class=top><span class=hb onclick="$('#sd').classList.toggle('o')">${ic('menu')}</span><select onchange="setCo(this.value)">${cos.map(c=>`<option value="${c.id}" ${c.id==cid?'selected':''}>${esc(c.name)}</option>`).join('')||'<option>No company</option>'}</select><span class=sp></span><span class="bd ${adm?'':'gn'}">${adm?'Admin':'User'}</span><div class=av title="Change password" onclick="chPw()">${esc(ini)}</div></div><div class=pg id=pg></div></div>`;
+ if(!adm){$('#sd').remove();document.querySelector('.hb').remove();document.querySelector('.main').classList.add('nos');const tp=document.querySelector('.top');
+  if(tab!='uhome')tp.insertAdjacentHTML('afterbegin',`<button class="btn g sm" onclick="go('uhome')">← Back</button>`);
+  tp.insertAdjacentHTML('beforeend',`<button class="btn g sm" title="Logout" onclick="sb.auth.signOut().then(boot)">${ic('out')}</button>`)}
+ render()}
 function go(t){tab=t;shell()}
 async function setCo(v){cid=v;localStorage.setItem('cid',v);await loadRef();render()}
 function chPw(){modal('Password badla',[{k:'p',l:'Navin password',t:'password'}],async f=>{if(fail((await sb.auth.updateUser({password:pw(f.get('p'))})).error))return;toast('Password badalla');return 1})}
 
 function modal(title,fields,save){const d=document.createElement('div');d.className='mod';
- d.innerHTML=`<form class=mb><h2 style="margin-bottom:16px">${title}</h2>${fields.map(f=>`<div class=fl>${f.l}${f.t=='select'?`<select name=${f.k} ${f.r===false?'':'required'}>${f.o}</select>`:f.t=='checks'?f.o.map(c=>`<label style="display:flex;gap:8px;font-weight:400;align-items:center"><input type=checkbox style="width:auto" name=${f.k} value="${c[0]}" ${(f.sel||[]).includes(c[0])?'checked':''}>${esc(c[1])}</label>`).join(''):`<input name=${f.k} type=${f.t||'text'} step=any ${f.d?`value="${f.d}"`:''} ${f.r===false?'':'required'}>`}</div>`).join('')}<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button type=button class="btn g" id=mc>Cancel</button><button class=btn>Save</button></div></form>`;
- document.body.appendChild(d);d.querySelector('#mc').onclick=()=>d.remove();
+ d.innerHTML=`<form class=mb><h2 style="margin-bottom:16px">${title}</h2>${fields.map(f=>`<div class=fl>${f.l}${f.t=='select'?`<select name=${f.k} ${f.r===false?'':'required'}>${typeof f.o=='function'?f.o():f.o}</select>${f.o&&f.o.nw?`<a style="color:var(--pri);cursor:pointer;font-weight:600" onclick="quickNew('${f.o.nw}')">+ Navin ${f.o.nw} add kara</a>`:''}`:f.t=='checks'?f.o.map(c=>`<label style="display:flex;gap:8px;font-weight:400;align-items:center"><input type=checkbox style="width:auto" name=${f.k} value="${c[0]}" ${(f.sel||[]).includes(c[0])?'checked':''}>${esc(c[1])}</label>`).join(''):`<input name=${f.k} type=${f.t||'text'} step=any ${f.d!=null?`value="${esc(f.d)}"`:''} ${f.r===false?'':'required'}>`}</div>`).join('')}<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button type=button class="btn g" id=mc>Cancel</button><button class=btn>Save</button></div></form>`;
+ document.body.appendChild(d);fields.forEach(f=>{if(f.v!=null&&f.t=='select')d.querySelector(`[name=${f.k}]`).value=f.v});d.querySelector('#mc').onclick=()=>d.remove();
  d.querySelector('form').onsubmit=async e=>{e.preventDefault();if(await save(new FormData(e.target)))d.remove()}}
 const sel=a=>a.map(x=>`<option value="${x[0]}">${esc(x[1])}</option>`).join('');
 const L={txn_date:'Date',item_id:'Item',party_id:'Party',qty:'Qty',rate:'Rate',amount:'Amount',name:'Name',phone:'Phone',type:'Type',unit:'Unit',kind:'Kind',min_stock:'Min Stock',note:'Note'};
@@ -81,17 +88,29 @@ async function page(o){
  $('#pg').innerHTML=`<div class=ph><h1>${o.title}</h1><input id=sq placeholder="Search..." style="max-width:210px"><button class=btn onclick="window.add()">${ic('plus')}${o.add||'Add New'}</button></div><div class="card tw" id=lst><div class=empty>Loading...</div></div>`;
  let q=sb.from(o.table).select('*').order('created_at',{ascending:false}).limit(200);if(!o.noCo)q=q.eq('company_id',cid);if(o.filter)q=q.match(o.filter);
  const rows=(await q).data||[],draw=()=>{const s=$('#sq').value.toLowerCase(),r=rows.filter(x=>!s||JSON.stringify(Object.values(x)).toLowerCase().includes(s)||o.cols.some(c=>c.endsWith('_id')&&cell(c,x[c]).toLowerCase().includes(s)));
-  $('#lst').innerHTML=r.length?`<table><tr>${o.cols.map(c=>`<th>${L[c]||c}</th>`).join('')}</tr>${r.map(x=>`<tr>${o.cols.map(c=>`<td>${cell(c,x[c])}</td>`).join('')}</tr>`).join('')}</table>`:'<div class=empty>Kahi entry nahi</div>'};
+  $('#lst').innerHTML=r.length?`<table><tr>${o.cols.map(c=>`<th>${L[c]||c}</th>`).join('')}<th></th></tr>${r.map(x=>`<tr>${o.cols.map(c=>`<td>${cell(c,x[c])}</td>`).join('')}<td style="text-align:right"><button class="btn g sm" onclick="window.ed('${x.id}')">Edit</button> <button class="btn g sm" style="color:#dc2626" onclick="window.dl('${x.id}')">Delete</button></td></tr>`).join('')}</table>`:'<div class=empty>Kahi entry nahi</div>'};
  draw();$('#sq').oninput=draw;
  window.add=()=>modal(o.add||'Add New',o.fields,async f=>{const v={};for(const[k,x]of f)if(x!=='')v[k]=x;
   if(o.table=='txns')v.amount=(+v.qty||0)*(+v.rate||0);const row={...v,...o.fixed};if(!o.noCo){row.company_id=cid;row.created_by=me.id}
   if(fail((await sb.from(o.table).insert(row)).error))return;
   if(['items','parties'].includes(o.table))await loadRef();if(o.table=='companies'){cos=(await sb.from('companies').select('*').order('name')).data;if(!cid)cid=cos[0]?.id;shell();toast('Saved');return 1}
-  toast('Saved');render();return 1})}
+  toast('Saved');render();return 1})
+ const after=async()=>{if(['items','parties'].includes(o.table))await loadRef();if(o.table=='companies'){cos=(await sb.from('companies').select('*').order('name')).data||[];if(!cos.find(c=>c.id==cid))cid=cos[0]?.id;shell()}else render()};
+ const NP='Permission nahi: fakt admin kinva tumhi keleli (24 tasatli) entry badalu/kadhu shakta';
+ window.ed=id=>{const r=rows.find(x=>x.id==id);modal('Edit',o.fields.map(f=>({...f,d:r[f.k],v:r[f.k]})),async f=>{const v={};for(const[k,x]of f)v[k]=x===''?null:x;
+  if(o.table=='txns')v.amount=(+v.qty||0)*(+v.rate||0);
+  const{data,error}=await sb.from(o.table).update(v).eq('id',id).select();if(fail(error))return;if(!data.length)return toast(NP);
+  toast('Updated');await after();return 1})};
+ window.dl=async id=>{const r=rows.find(x=>x.id==id);
+  if(o.table=='companies'){if(prompt('Company cha SAGLA data delete hoil! Confirm sathi company cha naav lihha: '+r.name)!==r.name)return}else if(!confirm('Hi entry delete karaychi ka?'))return;
+  const{data,error}=await sb.from(o.table).delete().eq('id',id).select();
+  if(error)return toast(error.code=='23503'?'Hyacha vapar entries madhe zala ahe, adhi tya entries delete kara':error.message);
+  if(!data.length)return toast(NP);toast('Deleted');after()}}
 
 async function render(){
  if(!cid&&!['companies','users'].includes(tab))return $('#pg').innerHTML=`<div class="card empty">${ic('bld')}<h3>Company nahi</h3>${me.role=='admin'?'Companies madhun pahili company add kara.':'Admin ne tumhala company assign karavi.'}</div>`;
- const IT=k=>sel(items.filter(x=>x.kind==k).map(x=>[x.id,`${x.name} (${x.unit})`])),PT=t=>sel(parties.filter(x=>x.type==t).map(x=>[x.id,x.name])),D={k:'txn_date',l:'Date',t:'date',d:today()};
+ if(tab=='uhome')return home();
+ const IT=k=>{const f=()=>sel(items.filter(x=>x.kind==k).map(x=>[x.id,`${x.name} (${x.unit})`]));f.nw=k;return f},PT=t=>{const f=()=>sel(parties.filter(x=>x.type==t).map(x=>[x.id,x.name]));f.nw=t;return f},D={k:'txn_date',l:'Date',t:'date',d:today()};
  if(tab=='dash')return dash();
  if(tab=='production')page({title:'Daily Production',add:'Add Production',table:'txns',fixed:{type:'production'},filter:{type:'production'},fields:[{k:'item_id',l:'Product',t:'select',o:IT('product')},{k:'qty',l:'Quantity',t:'number'},D,{k:'note',l:'Note',r:false}],cols:['txn_date','item_id','qty','note']});
  else if(tab=='sale')page({title:'Sales',add:'New Sale',table:'txns',fixed:{type:'sale'},filter:{type:'sale'},fields:[{k:'party_id',l:'Customer',t:'select',o:PT('customer')},{k:'item_id',l:'Product',t:'select',o:IT('product')},{k:'qty',l:'Quantity',t:'number'},{k:'rate',l:'Rate',t:'number'},D],cols:['txn_date','party_id','item_id','qty','rate','amount']});
@@ -133,5 +152,14 @@ async function toggleU(id,a){if(id==me.id)return toast('Swatahla disable karu sh
 async function backup(){const out={company:cos.find(c=>c.id==cid),date:new Date().toISOString()};
  for(const t of['items','parties','txns','payments','notifications']){const{data,error}=await sb.from(t).select('*').eq('company_id',cid);if(fail(error))return;out[t]=data}
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));a.download=`backup_${out.company.name}_${today()}.json`;a.click()}
+function home(){const T=[['production','Production','layers','#4f46e5,#7c3aed'],['sale','Sale','cart','#059669,#10b981'],['receive','Material Receive','truck','#d97706,#f59e0b'],['stock','Stock','box','#0891b2,#06b6d4']];
+ $('#pg').style.cssText='padding:12px;max-width:none';
+ $('#pg').innerHTML=`<div class=tiles>${T.map(t=>`<a class=tile style="background:linear-gradient(135deg,${t[3]})" onclick="go('${t[0]}')">${ic(t[2])}<span>${t[1]}</span></a>`).join('')}</div>`}
+function quickNew(k){document.querySelectorAll('.mod').forEach(m=>m.remove());const it=k=='product'||k=='material';
+ modal('Navin '+k,it?[{k:'name',l:'Item name'},{k:'unit',l:'Unit',d:'nos'},{k:'min_stock',l:'Min stock',t:'number',r:false}]:[{k:'name',l:'Name'},{k:'phone',l:'Phone',r:false}],async f=>{
+  const v={name:f.get('name'),company_id:cid,created_by:me.id};
+  if(it){v.kind=k;v.unit=f.get('unit')||'nos';if(f.get('min_stock'))v.min_stock=+f.get('min_stock')}else{v.type=k;if(f.get('phone'))v.phone=f.get('phone')}
+  if(fail((await sb.from(it?'items':'parties').insert(v)).error))return;
+  await loadRef();toast('Saved');setTimeout(()=>window.add&&window.add(),0);return 1})}
 boot();
 </script></body></html>
