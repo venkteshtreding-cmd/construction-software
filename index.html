@@ -54,8 +54,8 @@ async function login(e){e.preventDefault();const u=$('#u').value.trim().toLowerC
  if(r.error)return loginUI('Username kinva password chuk ahe');boot()}
 async function boot(){
  const{data:{session}}=await sb.auth.getSession();if(!session)return loginUI();
- const{data:p}=await sb.from('profiles').select('*').eq('id',session.user.id).single();
- if(!p||!p.active){await sb.auth.signOut();return loginUI('Account inactive ahe')}
+ const{data:p,error:pe}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle();
+ if(!p||!p.active){await sb.auth.signOut();return loginUI(pe?'DB error: '+pe.message:!p?'Profile sapdla nahi (id: '+session.user.id+')':'Account disabled ahe')}
  me=p;cos=(await sb.from('companies').select('*').order('name')).data||[];
  cid=localStorage.getItem('cid');if(!cos.find(x=>x.id==cid))cid=cos[0]?.id;
  await loadRef();shell()}
