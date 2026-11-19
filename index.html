@@ -81,7 +81,7 @@ function modal(title,fields,save){const d=document.createElement('div');d.classN
  document.body.appendChild(d);fields.forEach(f=>{if(f.v!=null&&f.t=='select')d.querySelector(`[name=${f.k}]`).value=f.v});d.querySelector('#mc').onclick=()=>d.remove();
  d.querySelector('form').onsubmit=async e=>{e.preventDefault();if(await save(new FormData(e.target)))d.remove()}}
 const sel=a=>a.map(x=>`<option value="${x[0]}">${esc(x[1])}</option>`).join('');
-const L={txn_date:'Date',item_id:'Item',party_id:'Party',qty:'Qty',rate:'Rate',amount:'Amount',name:'Name',phone:'Phone',type:'Type',unit:'Unit',kind:'Kind',min_stock:'Min Stock',note:'Note'};
+const L={txn_date:'Date',item_id:'Item',party_id:'Party',qty:'Qty',rate:'Rate',amount:'Amount',name:'Name',phone:'Phone',type:'Type',unit:'Unit',kind:'Kind',min_stock:'Min Stock',opening_stock:'Opening Stock',note:'Note'};
 function cell(c,v){if(c=='txn_date')return(v||'').split('-').reverse().join('-');if(c.endsWith('_id'))return esc((items.find(i=>i.id==v)||parties.find(p=>p.id==v)||{}).name);if(c=='amount'||c=='rate')return v==null?'':inr(v);if(c=='type'||c=='kind')return`<span class=bd>${esc(v)}</span>`;return esc(v)}
 
 async function page(o){
@@ -116,7 +116,7 @@ async function render(){
  else if(tab=='sale')page({title:'Sales',add:'New Sale',table:'txns',fixed:{type:'sale'},filter:{type:'sale'},fields:[{k:'party_id',l:'Customer',t:'select',o:PT('customer')},{k:'item_id',l:'Product',t:'select',o:IT('product')},{k:'qty',l:'Quantity',t:'number'},{k:'rate',l:'Rate',t:'number'},D],cols:['txn_date','party_id','item_id','qty','rate','amount']});
  else if(tab=='receive')page({title:'Material Receive',add:'Receive Material',table:'txns',fixed:{type:'receive'},filter:{type:'receive'},fields:[{k:'party_id',l:'Supplier',t:'select',o:PT('supplier')},{k:'item_id',l:'Material',t:'select',o:IT('material')},{k:'qty',l:'Quantity',t:'number'},{k:'rate',l:'Rate',t:'number',r:false},D],cols:['txn_date','party_id','item_id','qty','rate','amount']});
  else if(tab=='parties')page({title:'Parties',add:'Add Party',table:'parties',fields:[{k:'name',l:'Name'},{k:'phone',l:'Phone',r:false},{k:'type',l:'Type',t:'select',o:sel([['customer','Customer'],['supplier','Supplier']])}],cols:['name','phone','type']});
- else if(tab=='items')page({title:'Items',add:'Add Item',table:'items',fields:[{k:'name',l:'Item name (e.g. Paver 60mm)'},{k:'unit',l:'Unit',d:'nos'},{k:'kind',l:'Kind',t:'select',o:sel([['product','Product'],['material','Material']])},{k:'min_stock',l:'Min stock (low alert sathi)',t:'number',r:false}],cols:['name','unit','kind','min_stock']});
+ else if(tab=='items')page({title:'Items',add:'Add Item',table:'items',fields:[{k:'name',l:'Item name (e.g. Paver 60mm)'},{k:'unit',l:'Unit',d:'nos'},{k:'kind',l:'Kind',t:'select',o:sel([['product','Product'],['material','Material']])},{k:'opening_stock',l:'Opening stock (suruvatiche stock)',t:'number',r:false},{k:'min_stock',l:'Min stock (low alert sathi)',t:'number',r:false}],cols:['name','unit','kind','opening_stock','min_stock']});
  else if(tab=='companies')page({title:'Companies / Sites',add:'Add Company',table:'companies',noCo:1,fields:[{k:'name',l:'Company / Site name'}],cols:['name']});
  else if(tab=='stock')stockUI();else if(tab=='users')usersUI();
  else if(tab=='backup')$('#pg').innerHTML=`<div class=ph><h1>Backup</h1></div><div class=card><h3>${esc((cos.find(c=>c.id==cid)||{}).name)}</h3><p style="color:var(--mu);margin-bottom:14px">Hya company cha sagla data (items, parties, entries, payments, notifications) JSON file madhe download hoil.</p><button class=btn onclick="backup()">${ic('dl')}Download Backup</button></div>`}
@@ -156,9 +156,9 @@ function home(){const T=[['production','Production','layers','#4f46e5,#7c3aed'],
  $('#pg').style.cssText='padding:12px;max-width:none';
  $('#pg').innerHTML=`<div class=tiles>${T.map(t=>`<a class=tile style="background:linear-gradient(135deg,${t[3]})" onclick="go('${t[0]}')">${ic(t[2])}<span>${t[1]}</span></a>`).join('')}</div>`}
 function quickNew(k){document.querySelectorAll('.mod').forEach(m=>m.remove());const it=k=='product'||k=='material';
- modal('Navin '+k,it?[{k:'name',l:'Item name'},{k:'unit',l:'Unit',d:'nos'},{k:'min_stock',l:'Min stock',t:'number',r:false}]:[{k:'name',l:'Name'},{k:'phone',l:'Phone',r:false}],async f=>{
+ modal('Navin '+k,it?[{k:'name',l:'Item name'},{k:'unit',l:'Unit',d:'nos'},{k:'opening_stock',l:'Opening stock',t:'number',r:false},{k:'min_stock',l:'Min stock',t:'number',r:false}]:[{k:'name',l:'Name'},{k:'phone',l:'Phone',r:false}],async f=>{
   const v={name:f.get('name'),company_id:cid,created_by:me.id};
-  if(it){v.kind=k;v.unit=f.get('unit')||'nos';if(f.get('min_stock'))v.min_stock=+f.get('min_stock')}else{v.type=k;if(f.get('phone'))v.phone=f.get('phone')}
+  if(it){v.kind=k;v.unit=f.get('unit')||'nos';if(f.get('min_stock'))v.min_stock=+f.get('min_stock');if(f.get('opening_stock'))v.opening_stock=+f.get('opening_stock')}else{v.type=k;if(f.get('phone'))v.phone=f.get('phone')}
   if(fail((await sb.from(it?'items':'parties').insert(v)).error))return;
   await loadRef();toast('Saved');setTimeout(()=>window.add&&window.add(),0);return 1})}
 boot();
