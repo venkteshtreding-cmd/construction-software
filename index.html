@@ -1,0 +1,89 @@
+<!doctype html><html lang="mr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Company ERP</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:#f3f4f6;color:#111}
+header{background:#1e3a5f;color:#fff;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+header b{flex:1}select,input,button{font:inherit;padding:8px;border:1px solid #ccc;border-radius:6px}
+button{background:#1e3a5f;color:#fff;border:0;cursor:pointer}button.s{background:#e5e7eb;color:#111}
+nav{display:flex;overflow-x:auto;background:#fff;border-bottom:1px solid #ddd}nav a{padding:12px 14px;white-space:nowrap;cursor:pointer}nav a.on{border-bottom:3px solid #1e3a5f;font-weight:600}
+main{padding:12px;max-width:900px;margin:auto}.card{background:#fff;border-radius:8px;padding:12px;margin-bottom:12px;box-shadow:0 1px 2px #0002}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}form label{font-size:12px;color:#555;display:flex;flex-direction:column;gap:3px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%}td,th{padding:6px 8px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap}
+.low{color:#b91c1c;font-weight:600}.login{max-width:320px;margin:15vh auto}.login input{width:100%;margin:6px 0}
+</style></head><body><div id="app"></div><script>
+const URL_='https://xggzsdhijlmwmgiecjsf.supabase.co',KEY='sb_publishable_dlqLysZMJLzmpBPkWKt5lg_6QTbbn-5';
+const sb=supabase.createClient(URL_,KEY);
+let me,cos=[],cid,tab='dash',items=[],parties=[];
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10),mail=u=>u.trim().toLowerCase()+'@erp.app';
+const err=e=>{if(e){alert(e.message);return true}};
+
+function loginUI(m=''){$('#app').innerHTML=`<div class="card login"><h2>Login</h2><input id=u placeholder="Username"><input id=p type=password placeholder="Password"><button style="width:100%" onclick="login()">Login</button><p style="color:#b91c1c">${esc(m)}</p></div>`}
+async function login(){const{error}=await sb.auth.signInWithPassword({email:mail($('#u').value),password:$('#p').value});if(error)return loginUI('Username / password chuk');boot()}
+async function boot(){
+ const{data:{session}}=await sb.auth.getSession();if(!session)return loginUI();
+ const{data:p}=await sb.from('profiles').select('*').eq('id',session.user.id).single();
+ if(!p||!p.active){await sb.auth.signOut();return loginUI('Account inactive ahe')}
+ me=p;const{data:c}=await sb.from('companies').select('*').order('name');cos=c||[];
+ cid=localStorage.getItem('cid');if(!cos.find(x=>x.id==cid))cid=cos[0]?.id;
+ await loadRef();shell()}
+async function loadRef(){if(!cid){items=[];parties=[];return}
+ [items,parties]=await Promise.all([sb.from('items').select('*').eq('company_id',cid).order('name').then(r=>r.data||[]),sb.from('parties').select('*').eq('company_id',cid).order('name').then(r=>r.data||[])])}
+function shell(){
+ const adm=me.role=='admin',tabs=[['dash','Dashboard'],['production','Production'],['sale','Sale'],['receive','Material Receive'],['stock','Stock'],['parties','Parties'],['items','Items']];
+ if(adm)tabs.push(['companies','Companies'],['users','Users'],['backup','Backup']);
+ $('#app').innerHTML=`<header><b>${esc(me.full_name||me.username)} ${adm?'(Admin)':''}</b><select id=co onchange="setCo(this.value)">${cos.map(c=>`<option value="${c.id}" ${c.id==cid?'selected':''}>${esc(c.name)}</option>`).join('')}</select><button class=s onclick="sb.auth.signOut().then(boot)">Logout</button></header>
+ <nav>${tabs.map(t=>`<a class="${t[0]==tab?'on':''}" onclick="tab='${t[0]}';shell()">${t[1]}</a>`).join('')}</nav><main id=main></main>`;render()}
+async function setCo(v){cid=v;localStorage.setItem('cid',v);await loadRef();render()}
+
+function sel(arr){return arr.map(a=>`<option value="${a[0]}">${esc(a[1])}</option>`).join('')}
+// generic form + list
+async function crud({table,fields,fixed={},cols,noCo,filter}){
+ const m=$('#main');
+ m.innerHTML=`<div class=card><form id=f>${fields.map(f=>`<label>${f.l}${f.t=='select'?`<select name=${f.k} ${f.r===false?'':'required'}>${f.o}</select>`:`<input name=${f.k} type=${f.t||'text'} step=any ${f.d?`value="${f.d}"`:''} ${f.r===false?'':'required'}>`}</label>`).join('')}<label>&nbsp;<button>Save</button></label></form></div><div class=card><div class=tw id=lst>...</div></div>`;
+ $('#f').onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.target));
+  for(const k in v)if(v[k]==='')delete v[k];
+  if(table=='txns')v.amount=(+v.qty||0)*(+v.rate||0);
+  const row={...v,...fixed};if(!noCo){row.company_id=cid;row.created_by=me.id}
+  if(err((await sb.from(table).insert(row)).error))return;
+  if(['items','parties'].includes(table))await loadRef();render()};
+ let q=sb.from(table).select('*').order('created_at',{ascending:false}).limit(50);if(!noCo)q=q.eq('company_id',cid);if(filter)q=q.match(filter);
+ const{data}=await q,nm=id=>(items.find(i=>i.id==id)||parties.find(p=>p.id==id)||{}).name||'';
+ $('#lst').innerHTML=`<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${(data||[]).map(r=>`<tr>${cols.map(c=>`<td>${esc(c.endsWith('_id')?nm(r[c]):r[c])}</td>`).join('')}</tr>`).join('')}</table>`}
+
+async function render(){
+ const m=$('#main');if(!cid&&tab!='companies'&&tab!='users')return m.innerHTML='<div class=card>Company nahi. Admin ne company assign karavi.</div>';
+ const P=(i)=>sel(items.filter(x=>x.kind==i).map(x=>[x.id,`${x.name} (${x.unit})`]));
+ const PT=t=>sel(parties.filter(x=>x.type==t).map(x=>[x.id,x.name]));
+ if(tab=='dash'){
+  const{data:s}=await sb.from('stock').select('*').eq('company_id',cid);let n=[];
+  if(me.role=='admin')n=(await sb.from('notifications').select('*').eq('company_id',cid).order('created_at',{ascending:false}).limit(15)).data||[];
+  const low=(s||[]).filter(x=>+x.qty<=+x.min_stock&&+x.min_stock>0);
+  m.innerHTML=`<div class=card><h3>Low stock</h3>${low.length?low.map(x=>`<div class=low>${esc(x.name)}: ${x.qty} ${esc(x.unit)} (min ${x.min_stock})</div>`).join(''):'Sagla theek ahe'}</div>${me.role=='admin'?`<div class=card><h3>Notifications</h3>${n.map(x=>`<div>${new Date(x.created_at).toLocaleString()} — ${esc(x.message)}</div>`).join('')||'Nahi'}</div>`:''}`}
+ else if(tab=='production')crud({table:'txns',fixed:{type:'production'},filter:{type:'production'},fields:[{k:'item_id',l:'Product',t:'select',o:P('product')},{k:'qty',l:'Qty',t:'number'},{k:'txn_date',l:'Date',t:'date',d:today()},{k:'note',l:'Note',r:false}],cols:['txn_date','item_id','qty','note']});
+ else if(tab=='sale')crud({table:'txns',fixed:{type:'sale'},filter:{type:'sale'},fields:[{k:'party_id',l:'Customer',t:'select',o:PT('customer')},{k:'item_id',l:'Product',t:'select',o:P('product')},{k:'qty',l:'Qty',t:'number'},{k:'rate',l:'Rate',t:'number'},{k:'txn_date',l:'Date',t:'date',d:today()}],cols:['txn_date','party_id','item_id','qty','rate','amount']});
+ else if(tab=='receive')crud({table:'txns',fixed:{type:'receive'},filter:{type:'receive'},fields:[{k:'party_id',l:'Supplier',t:'select',o:PT('supplier')},{k:'item_id',l:'Material',t:'select',o:P('material')},{k:'qty',l:'Qty',t:'number'},{k:'rate',l:'Rate',t:'number',r:false},{k:'txn_date',l:'Date',t:'date',d:today()}],cols:['txn_date','party_id','item_id','qty','rate','amount']});
+ else if(tab=='stock'){const{data:s}=await sb.from('stock').select('*').eq('company_id',cid).order('kind');
+  m.innerHTML=`<div class=card><div class=tw><table><tr><th>Item</th><th>Type</th><th>Stock</th><th>Min</th></tr>${(s||[]).map(x=>`<tr class="${+x.qty<=+x.min_stock&&+x.min_stock>0?'low':''}"><td>${esc(x.name)}</td><td>${x.kind}</td><td>${x.qty} ${esc(x.unit)}</td><td>${x.min_stock}</td></tr>`).join('')}</table></div></div>`}
+ else if(tab=='parties')crud({table:'parties',fields:[{k:'name',l:'Name'},{k:'phone',l:'Phone',r:false},{k:'type',l:'Type',t:'select',o:sel([['customer','Customer'],['supplier','Supplier']])}],cols:['name','phone','type']});
+ else if(tab=='items')crud({table:'items',fields:[{k:'name',l:'Item (e.g. Paver 60mm)'},{k:'unit',l:'Unit',d:'nos'},{k:'kind',l:'Kind',t:'select',o:sel([['product','Product'],['material','Material']])},{k:'min_stock',l:'Min stock',t:'number',r:false}],cols:['name','unit','kind','min_stock']});
+ else if(tab=='companies')crud({table:'companies',noCo:1,fields:[{k:'name',l:'Company / Site name'}],cols:['name']});
+ else if(tab=='users')usersUI();
+ else if(tab=='backup'){m.innerHTML=`<div class=card><h3>Backup — ${esc((cos.find(c=>c.id==cid)||{}).name)}</h3><p>Hya company cha sagla data JSON file madhe download hoil.</p><button onclick="backup()">Download backup</button></div>`}}
+
+async function backup(){const out={company:cos.find(c=>c.id==cid),date:new Date().toISOString()};
+ for(const t of['items','parties','txns','payments','notifications']){const{data,error}=await sb.from(t).select('*').eq('company_id',cid);if(err(error))return;out[t]=data}
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));a.download=`backup_${out.company.name}_${today()}.json`;a.click()}
+
+async function usersUI(){
+ const{data:pr}=await sb.from('profiles').select('*').order('username'),{data:uc}=await sb.from('user_companies').select('*');
+ $('#main').innerHTML=`<div class=card><h3>Navin user</h3><form id=f><label>Username<input name=u required></label><label>Naav<input name=n></label><label>Password (min 6)<input name=p required minlength=6></label><label>Role<select name=r><option value=user>User</option><option value=admin>Admin</option></select></label><label style="grid-column:1/-1">Companies<span>${cos.map(c=>`<label style="flex-direction:row;gap:6px"><input type=checkbox name=c value="${c.id}">${esc(c.name)}</label>`).join('')}</span></label><label>&nbsp;<button>Create</button></label></form></div>
+ <div class=card><div class=tw><table><tr><th>User</th><th>Role</th><th>Companies</th><th>Active</th></tr>${(pr||[]).map(p=>`<tr><td>${esc(p.username)} ${esc(p.full_name)}</td><td>${p.role}</td><td>${(uc||[]).filter(x=>x.user_id==p.id).map(x=>esc((cos.find(c=>c.id==x.company_id)||{}).name)).join(', ')}</td><td><button class=s onclick="toggleU('${p.id}',${!p.active})">${p.active?'Disable':'Enable'}</button></td></tr>`).join('')}</table></div></div>`;
+ $('#f').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);
+  const s2=supabase.createClient(URL_,KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+  const{data,error}=await s2.auth.signUp({email:mail(fd.get('u')),password:fd.get('p'),options:{data:{full_name:fd.get('n')}}});if(err(error))return;
+  const id=data.user.id;await sb.from('profiles').update({role:fd.get('r'),full_name:fd.get('n')}).eq('id',id);
+  const cs=fd.getAll('c');if(cs.length&&err((await sb.from('user_companies').insert(cs.map(c=>({user_id:id,company_id:c})))).error))return;usersUI()}}
+async function toggleU(id,a){err((await sb.from('profiles').update({active:a}).eq('id',id)).error);usersUI()}
+boot();
+</script></body></html>
