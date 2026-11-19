@@ -1,89 +1,137 @@
 <!doctype html><html lang="mr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Company ERP</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:#f3f4f6;color:#111}
-header{background:#1e3a5f;color:#fff;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-header b{flex:1}select,input,button{font:inherit;padding:8px;border:1px solid #ccc;border-radius:6px}
-button{background:#1e3a5f;color:#fff;border:0;cursor:pointer}button.s{background:#e5e7eb;color:#111}
-nav{display:flex;overflow-x:auto;background:#fff;border-bottom:1px solid #ddd}nav a{padding:12px 14px;white-space:nowrap;cursor:pointer}nav a.on{border-bottom:3px solid #1e3a5f;font-weight:600}
-main{padding:12px;max-width:900px;margin:auto}.card{background:#fff;border-radius:8px;padding:12px;margin-bottom:12px;box-shadow:0 1px 2px #0002}
-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}form label{font-size:12px;color:#555;display:flex;flex-direction:column;gap:3px}
-.tw{overflow-x:auto}table{border-collapse:collapse;width:100%}td,th{padding:6px 8px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap}
-.low{color:#b91c1c;font-weight:600}.login{max-width:320px;margin:15vh auto}.login input{width:100%;margin:6px 0}
-</style></head><body><div id="app"></div><script>
+:root{--bg:#f1f5f9;--pri:#4f46e5;--pri2:#7c3aed;--tx:#0f172a;--mu:#64748b;--bd:#e2e8f0}
+*{box-sizing:border-box;margin:0}body{font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx)}
+svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.side{position:fixed;inset:0 auto 0 0;width:248px;background:#0f172a;color:#cbd5e1;display:flex;flex-direction:column;z-index:30;transition:.25s}
+.brand{padding:18px 20px;font-weight:700;color:#fff;font-size:17px;display:flex;gap:10px;align-items:center}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--pri),var(--pri2));display:grid;place-items:center;color:#fff}
+.menu{flex:1;overflow:auto;padding:6px 12px}.menu small{display:block;margin:14px 10px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#64748b}
+.menu a{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:2px}
+.menu a:hover{background:#1e293b;color:#fff}.menu a.on{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff}
+.main{margin-left:248px}.top{position:sticky;top:0;z-index:20;background:#ffffffe6;backdrop-filter:blur(8px);border-bottom:1px solid var(--bd);padding:12px 24px;display:flex;align-items:center;gap:12px}
+.top .sp{flex:1}.top select{width:auto;font-weight:600}.hb{display:none;cursor:pointer}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;display:grid;place-items:center;font-weight:700;cursor:pointer}
+.pg{padding:24px;max-width:1200px;margin:auto}.ph{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}.ph h1{font-size:22px;flex:1}
+.card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:18px;box-shadow:0 1px 3px #0f172a0d}.card h3{margin-bottom:12px;font-size:15px}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:16px}
+.k{display:flex;gap:14px;align-items:center}.ki{width:48px;height:48px;border-radius:12px;display:grid;place-items:center}.ki svg{width:22px;height:22px}
+.k b{font-size:22px;display:block}.k span{color:var(--mu);font-size:13px}.g2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+input,select{font:inherit;padding:9px 12px;border:1px solid var(--bd);border-radius:10px;background:#fff;width:100%;outline:0}
+input:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 3px #4f46e522}
+.btn{font:inherit;font-weight:600;padding:9px 16px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;cursor:pointer;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+.btn.g{background:#fff;color:var(--tx);border:1px solid var(--bd)}.btn.sm{padding:5px 10px;font-size:12px}
+table{width:100%;border-collapse:collapse}th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);text-align:left;padding:10px 12px;background:#f8fafc;white-space:nowrap}
+td{padding:11px 12px;border-top:1px solid var(--bd);white-space:nowrap}tr:hover td{background:#fafbff}.tw{overflow-x:auto}.empty{text-align:center;color:var(--mu);padding:30px}
+.bd{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:#eef2ff;color:#4338ca;display:inline-block}.bd.r{background:#fee2e2;color:#b91c1c}.bd.gn{background:#dcfce7;color:#15803d}
+.mod{position:fixed;inset:0;background:#0f172a99;display:grid;place-items:center;z-index:50;padding:16px}
+.mb{background:#fff;border-radius:16px;width:100%;max-width:460px;max-height:92vh;overflow:auto;padding:22px}
+.fl{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;font-weight:600;font-size:13px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:160px}.bars div{flex:1;text-align:center;font-size:11px;color:var(--mu);display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.bars i{display:block;background:linear-gradient(180deg,var(--pri),var(--pri2));border-radius:6px 6px 0 0;min-height:3px;margin-bottom:4px}
+#toast{position:fixed;right:20px;bottom:20px;background:#0f172a;color:#fff;padding:12px 18px;border-radius:10px;z-index:99;display:none}
+.lg{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}.lgl{background:linear-gradient(135deg,#312e81,#6d28d9);color:#fff;padding:60px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.lgl h1{font-size:34px}.lgl p{opacity:.85;max-width:380px}.lgr{display:grid;place-items:center;padding:24px;background:#fff}.lgb{width:100%;max-width:340px}.lgb h2{margin-bottom:4px;font-size:24px}
+@media(max-width:860px){.side{transform:translateX(-100%)}.side.o{transform:none}.main{margin-left:0}.g2,.lg{grid-template-columns:1fr}.lgl{display:none}.pg{padding:14px}.top{padding:10px 14px}.hb{display:flex}}
+</style></head><body><div id="app"></div><div id="toast"></div><script>
 const URL_='https://xggzsdhijlmwmgiecjsf.supabase.co',KEY='sb_publishable_dlqLysZMJLzmpBPkWKt5lg_6QTbbn-5';
 const sb=supabase.createClient(URL_,KEY);
 let me,cos=[],cid,tab='dash',items=[],parties=[];
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const today=()=>new Date().toISOString().slice(0,10),mail=u=>u.trim().toLowerCase()+'@erp.app';
-const err=e=>{if(e){alert(e.message);return true}};
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const mail=u=>u.trim().toLowerCase()+'@erp.app',pw=p=>p+'#erp'; // pw: chhota password (jase 2006) Supabase min-length sathi pad hoto
+const inr=v=>'₹'+(+v||0).toLocaleString('en-IN');
+const P={home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',box:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>',users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',cart:'<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>',truck:'<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',bld:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M9 6h.01M15 6h.01M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/>',shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',dl:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',menu:'<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>',plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',alert:'<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',rup:'<path d="M6 3h12M6 8h12M6 13l8.5 8M6 13h3a4 4 0 0 0 0-8"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24">${P[n]}</svg>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2800)}
+const fail=e=>{if(e){toast(e.message);return true}};
 
-function loginUI(m=''){$('#app').innerHTML=`<div class="card login"><h2>Login</h2><input id=u placeholder="Username"><input id=p type=password placeholder="Password"><button style="width:100%" onclick="login()">Login</button><p style="color:#b91c1c">${esc(m)}</p></div>`}
-async function login(){const{error}=await sb.auth.signInWithPassword({email:mail($('#u').value),password:$('#p').value});if(error)return loginUI('Username / password chuk');boot()}
+function loginUI(m=''){$('#app').innerHTML=`<div class=lg><div class=lgl><div class=logo style="width:54px;height:54px">${ic('bld')}</div><h1>Company ERP</h1><p>Production, Sale, Stock ani Accounts - sagle companies ek thikani, surakshit.</p></div><div class=lgr><form class=lgb onsubmit="login(event)"><h2>Welcome</h2><p style="color:var(--mu);margin-bottom:18px">Sign in karun suru kara</p><div class=fl>Username<input id=u required autofocus></div><div class=fl>Password<input id=p type=password required></div><button class=btn style="width:100%">Login</button><p style="color:#dc2626;margin-top:12px">${esc(m)}</p></form></div></div>`}
+async function login(e){e.preventDefault();const u=$('#u').value.trim().toLowerCase(),p=$('#p').value;
+ let r=await sb.auth.signInWithPassword({email:mail(u),password:pw(p)});
+ if(r.error&&u=='lucky'&&p=='2006'){const s=await sb.auth.signUp({email:mail(u),password:pw(p)});if(!s.error&&s.data.session)r={error:null}} // pahilyandach default admin auto-create
+ if(r.error)return loginUI('Username kinva password chuk ahe');boot()}
 async function boot(){
  const{data:{session}}=await sb.auth.getSession();if(!session)return loginUI();
  const{data:p}=await sb.from('profiles').select('*').eq('id',session.user.id).single();
  if(!p||!p.active){await sb.auth.signOut();return loginUI('Account inactive ahe')}
- me=p;const{data:c}=await sb.from('companies').select('*').order('name');cos=c||[];
+ me=p;cos=(await sb.from('companies').select('*').order('name')).data||[];
  cid=localStorage.getItem('cid');if(!cos.find(x=>x.id==cid))cid=cos[0]?.id;
  await loadRef();shell()}
 async function loadRef(){if(!cid){items=[];parties=[];return}
- [items,parties]=await Promise.all([sb.from('items').select('*').eq('company_id',cid).order('name').then(r=>r.data||[]),sb.from('parties').select('*').eq('company_id',cid).order('name').then(r=>r.data||[])])}
-function shell(){
- const adm=me.role=='admin',tabs=[['dash','Dashboard'],['production','Production'],['sale','Sale'],['receive','Material Receive'],['stock','Stock'],['parties','Parties'],['items','Items']];
- if(adm)tabs.push(['companies','Companies'],['users','Users'],['backup','Backup']);
- $('#app').innerHTML=`<header><b>${esc(me.full_name||me.username)} ${adm?'(Admin)':''}</b><select id=co onchange="setCo(this.value)">${cos.map(c=>`<option value="${c.id}" ${c.id==cid?'selected':''}>${esc(c.name)}</option>`).join('')}</select><button class=s onclick="sb.auth.signOut().then(boot)">Logout</button></header>
- <nav>${tabs.map(t=>`<a class="${t[0]==tab?'on':''}" onclick="tab='${t[0]}';shell()">${t[1]}</a>`).join('')}</nav><main id=main></main>`;render()}
+ [items,parties]=await Promise.all(['items','parties'].map(t=>sb.from(t).select('*').eq('company_id',cid).order('name').then(r=>r.data||[])))}
+const NAV=[['Main',[['dash','Dashboard','home']]],['Operations',[['production','Production','layers'],['sale','Sale','cart'],['receive','Material Receive','truck'],['stock','Stock','box']]],['Master',[['parties','Parties','users'],['items','Items','tag']]],['Admin',[['companies','Companies','bld'],['users','Users','shield'],['backup','Backup','dl']],1]];
+function shell(){const adm=me.role=='admin',ini=(me.full_name||me.username)[0].toUpperCase();
+ $('#app').innerHTML=`<aside class=side id=sd><div class=brand><div class=logo>${ic('bld')}</div>Company ERP</div><div class=menu>${NAV.filter(s=>!s[2]||adm).map(s=>`<small>${s[0]}</small>${s[1].map(n=>`<a class="${n[0]==tab?'on':''}" onclick="go('${n[0]}')">${ic(n[2])}${n[1]}</a>`).join('')}`).join('')}</div><div class=menu style="flex:none"><a onclick="sb.auth.signOut().then(boot)">${ic('out')}Logout</a></div></aside>
+ <div class=main><div class=top><span class=hb onclick="$('#sd').classList.toggle('o')">${ic('menu')}</span><select onchange="setCo(this.value)">${cos.map(c=>`<option value="${c.id}" ${c.id==cid?'selected':''}>${esc(c.name)}</option>`).join('')||'<option>No company</option>'}</select><span class=sp></span><span class="bd ${adm?'':'gn'}">${adm?'Admin':'User'}</span><div class=av title="Change password" onclick="chPw()">${esc(ini)}</div></div><div class=pg id=pg></div></div>`;render()}
+function go(t){tab=t;shell()}
 async function setCo(v){cid=v;localStorage.setItem('cid',v);await loadRef();render()}
+function chPw(){modal('Password badla',[{k:'p',l:'Navin password',t:'password'}],async f=>{if(fail((await sb.auth.updateUser({password:pw(f.get('p'))})).error))return;toast('Password badalla');return 1})}
 
-function sel(arr){return arr.map(a=>`<option value="${a[0]}">${esc(a[1])}</option>`).join('')}
-// generic form + list
-async function crud({table,fields,fixed={},cols,noCo,filter}){
- const m=$('#main');
- m.innerHTML=`<div class=card><form id=f>${fields.map(f=>`<label>${f.l}${f.t=='select'?`<select name=${f.k} ${f.r===false?'':'required'}>${f.o}</select>`:`<input name=${f.k} type=${f.t||'text'} step=any ${f.d?`value="${f.d}"`:''} ${f.r===false?'':'required'}>`}</label>`).join('')}<label>&nbsp;<button>Save</button></label></form></div><div class=card><div class=tw id=lst>...</div></div>`;
- $('#f').onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(e.target));
-  for(const k in v)if(v[k]==='')delete v[k];
-  if(table=='txns')v.amount=(+v.qty||0)*(+v.rate||0);
-  const row={...v,...fixed};if(!noCo){row.company_id=cid;row.created_by=me.id}
-  if(err((await sb.from(table).insert(row)).error))return;
-  if(['items','parties'].includes(table))await loadRef();render()};
- let q=sb.from(table).select('*').order('created_at',{ascending:false}).limit(50);if(!noCo)q=q.eq('company_id',cid);if(filter)q=q.match(filter);
- const{data}=await q,nm=id=>(items.find(i=>i.id==id)||parties.find(p=>p.id==id)||{}).name||'';
- $('#lst').innerHTML=`<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${(data||[]).map(r=>`<tr>${cols.map(c=>`<td>${esc(c.endsWith('_id')?nm(r[c]):r[c])}</td>`).join('')}</tr>`).join('')}</table>`}
+function modal(title,fields,save){const d=document.createElement('div');d.className='mod';
+ d.innerHTML=`<form class=mb><h2 style="margin-bottom:16px">${title}</h2>${fields.map(f=>`<div class=fl>${f.l}${f.t=='select'?`<select name=${f.k} ${f.r===false?'':'required'}>${f.o}</select>`:f.t=='checks'?f.o.map(c=>`<label style="display:flex;gap:8px;font-weight:400;align-items:center"><input type=checkbox style="width:auto" name=${f.k} value="${c[0]}" ${(f.sel||[]).includes(c[0])?'checked':''}>${esc(c[1])}</label>`).join(''):`<input name=${f.k} type=${f.t||'text'} step=any ${f.d?`value="${f.d}"`:''} ${f.r===false?'':'required'}>`}</div>`).join('')}<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px"><button type=button class="btn g" id=mc>Cancel</button><button class=btn>Save</button></div></form>`;
+ document.body.appendChild(d);d.querySelector('#mc').onclick=()=>d.remove();
+ d.querySelector('form').onsubmit=async e=>{e.preventDefault();if(await save(new FormData(e.target)))d.remove()}}
+const sel=a=>a.map(x=>`<option value="${x[0]}">${esc(x[1])}</option>`).join('');
+const L={txn_date:'Date',item_id:'Item',party_id:'Party',qty:'Qty',rate:'Rate',amount:'Amount',name:'Name',phone:'Phone',type:'Type',unit:'Unit',kind:'Kind',min_stock:'Min Stock',note:'Note'};
+function cell(c,v){if(c=='txn_date')return(v||'').split('-').reverse().join('-');if(c.endsWith('_id'))return esc((items.find(i=>i.id==v)||parties.find(p=>p.id==v)||{}).name);if(c=='amount'||c=='rate')return v==null?'':inr(v);if(c=='type'||c=='kind')return`<span class=bd>${esc(v)}</span>`;return esc(v)}
+
+async function page(o){
+ $('#pg').innerHTML=`<div class=ph><h1>${o.title}</h1><input id=sq placeholder="Search..." style="max-width:210px"><button class=btn onclick="window.add()">${ic('plus')}${o.add||'Add New'}</button></div><div class="card tw" id=lst><div class=empty>Loading...</div></div>`;
+ let q=sb.from(o.table).select('*').order('created_at',{ascending:false}).limit(200);if(!o.noCo)q=q.eq('company_id',cid);if(o.filter)q=q.match(o.filter);
+ const rows=(await q).data||[],draw=()=>{const s=$('#sq').value.toLowerCase(),r=rows.filter(x=>!s||JSON.stringify(Object.values(x)).toLowerCase().includes(s)||o.cols.some(c=>c.endsWith('_id')&&cell(c,x[c]).toLowerCase().includes(s)));
+  $('#lst').innerHTML=r.length?`<table><tr>${o.cols.map(c=>`<th>${L[c]||c}</th>`).join('')}</tr>${r.map(x=>`<tr>${o.cols.map(c=>`<td>${cell(c,x[c])}</td>`).join('')}</tr>`).join('')}</table>`:'<div class=empty>Kahi entry nahi</div>'};
+ draw();$('#sq').oninput=draw;
+ window.add=()=>modal(o.add||'Add New',o.fields,async f=>{const v={};for(const[k,x]of f)if(x!=='')v[k]=x;
+  if(o.table=='txns')v.amount=(+v.qty||0)*(+v.rate||0);const row={...v,...o.fixed};if(!o.noCo){row.company_id=cid;row.created_by=me.id}
+  if(fail((await sb.from(o.table).insert(row)).error))return;
+  if(['items','parties'].includes(o.table))await loadRef();if(o.table=='companies'){cos=(await sb.from('companies').select('*').order('name')).data;if(!cid)cid=cos[0]?.id;shell();toast('Saved');return 1}
+  toast('Saved');render();return 1})}
 
 async function render(){
- const m=$('#main');if(!cid&&tab!='companies'&&tab!='users')return m.innerHTML='<div class=card>Company nahi. Admin ne company assign karavi.</div>';
- const P=(i)=>sel(items.filter(x=>x.kind==i).map(x=>[x.id,`${x.name} (${x.unit})`]));
- const PT=t=>sel(parties.filter(x=>x.type==t).map(x=>[x.id,x.name]));
- if(tab=='dash'){
-  const{data:s}=await sb.from('stock').select('*').eq('company_id',cid);let n=[];
-  if(me.role=='admin')n=(await sb.from('notifications').select('*').eq('company_id',cid).order('created_at',{ascending:false}).limit(15)).data||[];
-  const low=(s||[]).filter(x=>+x.qty<=+x.min_stock&&+x.min_stock>0);
-  m.innerHTML=`<div class=card><h3>Low stock</h3>${low.length?low.map(x=>`<div class=low>${esc(x.name)}: ${x.qty} ${esc(x.unit)} (min ${x.min_stock})</div>`).join(''):'Sagla theek ahe'}</div>${me.role=='admin'?`<div class=card><h3>Notifications</h3>${n.map(x=>`<div>${new Date(x.created_at).toLocaleString()} — ${esc(x.message)}</div>`).join('')||'Nahi'}</div>`:''}`}
- else if(tab=='production')crud({table:'txns',fixed:{type:'production'},filter:{type:'production'},fields:[{k:'item_id',l:'Product',t:'select',o:P('product')},{k:'qty',l:'Qty',t:'number'},{k:'txn_date',l:'Date',t:'date',d:today()},{k:'note',l:'Note',r:false}],cols:['txn_date','item_id','qty','note']});
- else if(tab=='sale')crud({table:'txns',fixed:{type:'sale'},filter:{type:'sale'},fields:[{k:'party_id',l:'Customer',t:'select',o:PT('customer')},{k:'item_id',l:'Product',t:'select',o:P('product')},{k:'qty',l:'Qty',t:'number'},{k:'rate',l:'Rate',t:'number'},{k:'txn_date',l:'Date',t:'date',d:today()}],cols:['txn_date','party_id','item_id','qty','rate','amount']});
- else if(tab=='receive')crud({table:'txns',fixed:{type:'receive'},filter:{type:'receive'},fields:[{k:'party_id',l:'Supplier',t:'select',o:PT('supplier')},{k:'item_id',l:'Material',t:'select',o:P('material')},{k:'qty',l:'Qty',t:'number'},{k:'rate',l:'Rate',t:'number',r:false},{k:'txn_date',l:'Date',t:'date',d:today()}],cols:['txn_date','party_id','item_id','qty','rate','amount']});
- else if(tab=='stock'){const{data:s}=await sb.from('stock').select('*').eq('company_id',cid).order('kind');
-  m.innerHTML=`<div class=card><div class=tw><table><tr><th>Item</th><th>Type</th><th>Stock</th><th>Min</th></tr>${(s||[]).map(x=>`<tr class="${+x.qty<=+x.min_stock&&+x.min_stock>0?'low':''}"><td>${esc(x.name)}</td><td>${x.kind}</td><td>${x.qty} ${esc(x.unit)}</td><td>${x.min_stock}</td></tr>`).join('')}</table></div></div>`}
- else if(tab=='parties')crud({table:'parties',fields:[{k:'name',l:'Name'},{k:'phone',l:'Phone',r:false},{k:'type',l:'Type',t:'select',o:sel([['customer','Customer'],['supplier','Supplier']])}],cols:['name','phone','type']});
- else if(tab=='items')crud({table:'items',fields:[{k:'name',l:'Item (e.g. Paver 60mm)'},{k:'unit',l:'Unit',d:'nos'},{k:'kind',l:'Kind',t:'select',o:sel([['product','Product'],['material','Material']])},{k:'min_stock',l:'Min stock',t:'number',r:false}],cols:['name','unit','kind','min_stock']});
- else if(tab=='companies')crud({table:'companies',noCo:1,fields:[{k:'name',l:'Company / Site name'}],cols:['name']});
- else if(tab=='users')usersUI();
- else if(tab=='backup'){m.innerHTML=`<div class=card><h3>Backup — ${esc((cos.find(c=>c.id==cid)||{}).name)}</h3><p>Hya company cha sagla data JSON file madhe download hoil.</p><button onclick="backup()">Download backup</button></div>`}}
+ if(!cid&&!['companies','users'].includes(tab))return $('#pg').innerHTML=`<div class="card empty">${ic('bld')}<h3>Company nahi</h3>${me.role=='admin'?'Companies madhun pahili company add kara.':'Admin ne tumhala company assign karavi.'}</div>`;
+ const IT=k=>sel(items.filter(x=>x.kind==k).map(x=>[x.id,`${x.name} (${x.unit})`])),PT=t=>sel(parties.filter(x=>x.type==t).map(x=>[x.id,x.name])),D={k:'txn_date',l:'Date',t:'date',d:today()};
+ if(tab=='dash')return dash();
+ if(tab=='production')page({title:'Daily Production',add:'Add Production',table:'txns',fixed:{type:'production'},filter:{type:'production'},fields:[{k:'item_id',l:'Product',t:'select',o:IT('product')},{k:'qty',l:'Quantity',t:'number'},D,{k:'note',l:'Note',r:false}],cols:['txn_date','item_id','qty','note']});
+ else if(tab=='sale')page({title:'Sales',add:'New Sale',table:'txns',fixed:{type:'sale'},filter:{type:'sale'},fields:[{k:'party_id',l:'Customer',t:'select',o:PT('customer')},{k:'item_id',l:'Product',t:'select',o:IT('product')},{k:'qty',l:'Quantity',t:'number'},{k:'rate',l:'Rate',t:'number'},D],cols:['txn_date','party_id','item_id','qty','rate','amount']});
+ else if(tab=='receive')page({title:'Material Receive',add:'Receive Material',table:'txns',fixed:{type:'receive'},filter:{type:'receive'},fields:[{k:'party_id',l:'Supplier',t:'select',o:PT('supplier')},{k:'item_id',l:'Material',t:'select',o:IT('material')},{k:'qty',l:'Quantity',t:'number'},{k:'rate',l:'Rate',t:'number',r:false},D],cols:['txn_date','party_id','item_id','qty','rate','amount']});
+ else if(tab=='parties')page({title:'Parties',add:'Add Party',table:'parties',fields:[{k:'name',l:'Name'},{k:'phone',l:'Phone',r:false},{k:'type',l:'Type',t:'select',o:sel([['customer','Customer'],['supplier','Supplier']])}],cols:['name','phone','type']});
+ else if(tab=='items')page({title:'Items',add:'Add Item',table:'items',fields:[{k:'name',l:'Item name (e.g. Paver 60mm)'},{k:'unit',l:'Unit',d:'nos'},{k:'kind',l:'Kind',t:'select',o:sel([['product','Product'],['material','Material']])},{k:'min_stock',l:'Min stock (low alert sathi)',t:'number',r:false}],cols:['name','unit','kind','min_stock']});
+ else if(tab=='companies')page({title:'Companies / Sites',add:'Add Company',table:'companies',noCo:1,fields:[{k:'name',l:'Company / Site name'}],cols:['name']});
+ else if(tab=='stock')stockUI();else if(tab=='users')usersUI();
+ else if(tab=='backup')$('#pg').innerHTML=`<div class=ph><h1>Backup</h1></div><div class=card><h3>${esc((cos.find(c=>c.id==cid)||{}).name)}</h3><p style="color:var(--mu);margin-bottom:14px">Hya company cha sagla data (items, parties, entries, payments, notifications) JSON file madhe download hoil.</p><button class=btn onclick="backup()">${ic('dl')}Download Backup</button></div>`}
 
-async function backup(){const out={company:cos.find(c=>c.id==cid),date:new Date().toISOString()};
- for(const t of['items','parties','txns','payments','notifications']){const{data,error}=await sb.from(t).select('*').eq('company_id',cid);if(err(error))return;out[t]=data}
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));a.download=`backup_${out.company.name}_${today()}.json`;a.click()}
+async function dash(){
+ const d7=new Date(Date.now()-6*864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),T=today();
+ const[{data:s},{data:t}]=await Promise.all([sb.from('stock').select('*').eq('company_id',cid),sb.from('txns').select('*').eq('company_id',cid).gte('txn_date',d7).order('created_at',{ascending:false})]);
+ let n=[];if(me.role=='admin')n=(await sb.from('notifications').select('*').eq('company_id',cid).order('created_at',{ascending:false}).limit(8)).data||[];
+ const sm=(f)=>(t||[]).filter(f).reduce((a,x)=>a+(+x.qty),0),low=(s||[]).filter(x=>+x.min_stock>0&&+x.qty<=+x.min_stock);
+ const todaySale=(t||[]).filter(x=>x.type=='sale'&&x.txn_date==T).reduce((a,x)=>a+(+x.amount),0);
+ const days=[...Array(7)].map((_,i)=>new Date(Date.now()-(6-i)*864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10)),pr=days.map(d=>sm(x=>x.type=='production'&&x.txn_date==d)),mx=Math.max(...pr,1);
+ const K=(i,c,bg,v,l)=>`<div class="card k"><div class=ki style="background:${bg};color:${c}">${ic(i)}</div><div><b>${v}</b><span>${l}</span></div></div>`;
+ $('#pg').innerHTML=`<div class=ph><h1>Dashboard</h1></div><div class=kp>${K('layers','#4f46e5','#eef2ff',sm(x=>x.type=='production'&&x.txn_date==T),'Aajche production')}${K('rup','#16a34a','#dcfce7',inr(todaySale),'Aajchi sale')}${K('box','#0891b2','#cffafe',(s||[]).length,'Total items')}${K('alert',low.length?'#dc2626':'#64748b',low.length?'#fee2e2':'#f1f5f9',low.length,'Low stock')}</div>
+ <div class=g2><div class=card><h3>Production - last 7 days</h3><div class=bars>${pr.map((v,i)=>`<div><i style="height:${v/mx*100}%"></i>${v}<br>${days[i].slice(8)}</div>`).join('')}</div></div>
+ <div class=card><h3>Low stock alerts</h3>${low.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--bd)">${esc(x.name)} <span class="bd r" style="float:right">${x.qty} ${esc(x.unit)}</span></div>`).join('')||'<div class=empty>Sagla stock theek ahe</div>'}</div></div>
+ <div class=g2 style="margin-top:16px"><div class="card tw"><h3>Recent entries</h3><table><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th></tr>${(t||[]).slice(0,8).map(x=>`<tr><td>${cell('txn_date',x.txn_date)}</td><td>${cell('type',x.type)}</td><td>${cell('item_id',x.item_id)}</td><td>${x.qty}</td></tr>`).join('')}</table></div>
+ ${me.role=='admin'?`<div class=card><h3>${ic('bell')} Notifications</h3>${n.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--bd)">${esc(x.message)}<br><small style="color:var(--mu)">${new Date(x.created_at).toLocaleString()}</small></div>`).join('')||'<div class=empty>Nahi</div>'}</div>`:''}</div>`}
+
+async function stockUI(){const{data:s}=await sb.from('stock').select('*').eq('company_id',cid).order('kind');
+ $('#pg').innerHTML=`<div class=ph><h1>Stock</h1></div><div class="card tw"><table><tr><th>Item</th><th>Kind</th><th>Stock</th><th>Min</th><th>Status</th></tr>${(s||[]).map(x=>{const l=+x.min_stock>0&&+x.qty<=+x.min_stock;return`<tr><td>${esc(x.name)}</td><td>${cell('kind',x.kind)}</td><td><b>${x.qty}</b> ${esc(x.unit)}</td><td>${x.min_stock}</td><td><span class="bd ${l?'r':'gn'}">${l?'Low':'OK'}</span></td></tr>`}).join('')||'<tr><td class=empty colspan=5>Items madhe item add kara</td></tr>'}</table></div>`}
 
 async function usersUI(){
- const{data:pr}=await sb.from('profiles').select('*').order('username'),{data:uc}=await sb.from('user_companies').select('*');
- $('#main').innerHTML=`<div class=card><h3>Navin user</h3><form id=f><label>Username<input name=u required></label><label>Naav<input name=n></label><label>Password (min 6)<input name=p required minlength=6></label><label>Role<select name=r><option value=user>User</option><option value=admin>Admin</option></select></label><label style="grid-column:1/-1">Companies<span>${cos.map(c=>`<label style="flex-direction:row;gap:6px"><input type=checkbox name=c value="${c.id}">${esc(c.name)}</label>`).join('')}</span></label><label>&nbsp;<button>Create</button></label></form></div>
- <div class=card><div class=tw><table><tr><th>User</th><th>Role</th><th>Companies</th><th>Active</th></tr>${(pr||[]).map(p=>`<tr><td>${esc(p.username)} ${esc(p.full_name)}</td><td>${p.role}</td><td>${(uc||[]).filter(x=>x.user_id==p.id).map(x=>esc((cos.find(c=>c.id==x.company_id)||{}).name)).join(', ')}</td><td><button class=s onclick="toggleU('${p.id}',${!p.active})">${p.active?'Disable':'Enable'}</button></td></tr>`).join('')}</table></div></div>`;
- $('#f').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);
+ const pr=(await sb.from('profiles').select('*').order('username')).data||[],uc=(await sb.from('user_companies').select('*')).data||[],co=cos.map(c=>[c.id,c.name]);
+ window.UC=uc;$('#pg').innerHTML=`<div class=ph><h1>Users</h1><button class=btn onclick="addUser()">${ic('plus')}Add User</button></div><div class="card tw"><table><tr><th>User</th><th>Role</th><th>Companies</th><th>Status</th><th></th></tr>${pr.map(p=>`<tr><td><b>${esc(p.username)}</b><br><small style="color:var(--mu)">${esc(p.full_name)}</small></td><td><span class="bd ${p.role=='admin'?'':'gn'}">${p.role}</span></td><td>${p.role=='admin'?'All':uc.filter(x=>x.user_id==p.id).map(x=>esc((cos.find(c=>c.id==x.company_id)||{}).name)).join(', ')||'-'}</td><td><span class="bd ${p.active?'gn':'r'}">${p.active?'Active':'Disabled'}</span></td><td><button class="btn g sm" onclick="editCo('${p.id}')">Companies</button> <button class="btn g sm" onclick="toggleU('${p.id}',${!p.active})">${p.active?'Disable':'Enable'}</button></td></tr>`).join('')}</table></div>`;
+ window.addUser=()=>modal('Navin User / Admin',[{k:'u',l:'Username'},{k:'n',l:'Pura naav',r:false},{k:'p',l:'Password'},{k:'r',l:'Role',t:'select',o:sel([['user','User'],['admin','Admin']])},{k:'c',l:'Companies (User sathi)',t:'checks',o:co}],async f=>{
   const s2=supabase.createClient(URL_,KEY,{auth:{persistSession:false,autoRefreshToken:false}});
-  const{data,error}=await s2.auth.signUp({email:mail(fd.get('u')),password:fd.get('p'),options:{data:{full_name:fd.get('n')}}});if(err(error))return;
-  const id=data.user.id;await sb.from('profiles').update({role:fd.get('r'),full_name:fd.get('n')}).eq('id',id);
-  const cs=fd.getAll('c');if(cs.length&&err((await sb.from('user_companies').insert(cs.map(c=>({user_id:id,company_id:c})))).error))return;usersUI()}}
-async function toggleU(id,a){err((await sb.from('profiles').update({active:a}).eq('id',id)).error);usersUI()}
+  const{data,error}=await s2.auth.signUp({email:mail(f.get('u')),password:pw(f.get('p')),options:{data:{full_name:f.get('n')||''}}});if(fail(error))return;
+  const id=data.user.id;await sb.from('profiles').update({role:f.get('r'),full_name:f.get('n')||''}).eq('id',id);
+  const cs=f.getAll('c');if(cs.length)await sb.from('user_companies').insert(cs.map(c=>({user_id:id,company_id:c})));toast('User create zala');usersUI();return 1});
+ window.editCo=id=>modal('Companies assign kara',[{k:'c',l:'Companies',t:'checks',o:co,sel:uc.filter(x=>x.user_id==id).map(x=>x.company_id)}],async f=>{
+  await sb.from('user_companies').delete().eq('user_id',id);const cs=f.getAll('c');if(cs.length)await sb.from('user_companies').insert(cs.map(c=>({user_id:id,company_id:c})));toast('Updated');usersUI();return 1})}
+async function toggleU(id,a){if(id==me.id)return toast('Swatahla disable karu shakat nahi');fail((await sb.from('profiles').update({active:a}).eq('id',id)).error);usersUI()}
+async function backup(){const out={company:cos.find(c=>c.id==cid),date:new Date().toISOString()};
+ for(const t of['items','parties','txns','payments','notifications']){const{data,error}=await sb.from(t).select('*').eq('company_id',cid);if(fail(error))return;out[t]=data}
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));a.download=`backup_${out.company.name}_${today()}.json`;a.click()}
 boot();
 </script></body></html>
